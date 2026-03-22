@@ -77,6 +77,38 @@
     text-transform: uppercase;
   }
 
+  /* API KEY BAR */
+  .api-bar {
+    position: relative;
+    z-index: 10;
+    background: rgba(124,58,237,0.07);
+    border-bottom: 1px solid rgba(124,58,237,0.2);
+    padding: 10px 40px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex-wrap: wrap;
+  }
+  .api-bar label { font-size: 0.68rem; color: var(--accent); letter-spacing: 0.08em; text-transform: uppercase; white-space: nowrap; }
+  .api-bar input {
+    flex: 1;
+    min-width: 200px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 5px;
+    color: var(--text);
+    font-family: 'Space Mono', monospace;
+    font-size: 0.75rem;
+    padding: 7px 12px;
+    outline: none;
+  }
+  .api-bar input:focus { border-color: var(--accent); }
+  .api-bar a { font-size: 0.68rem; color: var(--accent2); text-decoration: none; white-space: nowrap; }
+  .api-bar a:hover { text-decoration: underline; }
+  .api-status { font-size: 0.68rem; padding: 3px 10px; border-radius: 20px; font-family: 'Syne', sans-serif; font-weight: 700; }
+  .api-status.set { background: rgba(16,185,129,0.15); color: var(--success); }
+  .api-status.unset { background: rgba(239,68,68,0.15); color: var(--danger); }
+
   /* TABS */
   .tabs {
     position: relative;
@@ -392,8 +424,15 @@
 
 <header>
   <div class="logo">Origin<span>AI</span> <sup>BETA</sup></div>
-  <div class="badge">Content Intelligence Suite · Powered by Claude</div>
+  <div class="badge">Content Intelligence Suite · Powered by Groq + Llama 3.3</div>
 </header>
+
+<div class="api-bar">
+  <label>🔑 Groq API Key</label>
+  <input type="password" id="groq-api-key" placeholder="gsk_xxxxxxxxxxxxxxxxxxxx" oninput="updateApiStatus()" autocomplete="off">
+  <span class="api-status unset" id="api-status">Not Set</span>
+  <a href="https://console.groq.com/keys" target="_blank">Get free API key →</a>
+</div>
 
 <div class="tabs">
   <button class="tab active" onclick="switchTab('plagiarism')"><span class="tab-icon">🔍</span>Plagiarism Check</button>
@@ -539,7 +578,49 @@
 <div id="copy-toast">✓ Copied to clipboard!</div>
 
 <script>
-const API_URL = "https://api.anthropic.com/v1/messages";
+const GROQ_API_URL = "https://api.groq.com/openai/v1/chat/completions";
+const GROQ_MODEL = "llama-3.3-70b-versatile";
+
+function getApiKey() {
+  return document.getElementById('groq-api-key').value.trim();
+}
+
+function updateApiStatus() {
+  const key = getApiKey();
+  const status = document.getElementById('api-status');
+  if (key && key.startsWith('gsk_') && key.length > 20) {
+    status.textContent = '✓ Key Set';
+    status.className = 'api-status set';
+  } else {
+    status.textContent = 'Not Set';
+    status.className = 'api-status unset';
+  }
+}
+
+async function callClaude(systemPrompt, userPrompt) {
+  const apiKey = getApiKey();
+  if (!apiKey) throw new Error('Please enter your Groq API key above first.');
+
+  const response = await fetch(GROQ_API_URL, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${apiKey}`
+    },
+    body: JSON.stringify({
+      model: GROQ_MODEL,
+      max_tokens: 1500,
+      messages: [
+        { role: 'system', content: systemPrompt },
+        { role: 'user', content: userPrompt }
+      ]
+    })
+  });
+
+  const data = await response.json();
+  if (data.error) throw new Error(data.error.message);
+  return data.choices[0].message.content;
+}
 
 // ===================== UTILS =====================
 function updateCount(inputId, countId) {
