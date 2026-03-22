@@ -447,7 +447,7 @@
 <div class="panel active" id="panel-plagiarism">
   <div class="section-label">Tool 01 / Plagiarism Detection</div>
   <h2>Plagiarism Checker</h2>
-  <p class="subtitle">Paste your text below. Claude will analyze it for potential plagiarism, estimate similarity scores, and generate a detailed report with source analysis.</p>
+  <p class="subtitle">Paste your text below. Groq AI will analyze it for potential plagiarism, estimate similarity scores, and generate a detailed report with source analysis.</p>
 
   <div class="notice"><strong>How it works:</strong> Claude analyzes linguistic patterns, phrase originality, structural uniqueness, and cross-references against known writing conventions to estimate plagiarism likelihood. Results are indicative and AI-powered.</div>
 
@@ -646,22 +646,6 @@ function setLoading(btnId, loading, text) {
   const btn = document.getElementById(btnId);
   btn.disabled = loading;
   btn.innerHTML = loading ? `<span class="spinner"></span> Analyzing...` : text;
-}
-
-async function callClaude(systemPrompt, userPrompt) {
-  const response = await fetch(API_URL, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      model: 'claude-sonnet-4-20250514',
-      max_tokens: 1000,
-      system: systemPrompt,
-      messages: [{ role: 'user', content: userPrompt }]
-    })
-  });
-  const data = await response.json();
-  if (data.error) throw new Error(data.error.message);
-  return data.content[0].text;
 }
 
 function copyToClipboard(text) {
