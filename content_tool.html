@@ -1,0 +1,918 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>OriginAI — Content Intelligence Suite</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=Space+Mono:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0a0a0f;
+    --surface: #111118;
+    --surface2: #1a1a25;
+    --border: #2a2a3a;
+    --accent: #7c3aed;
+    --accent2: #06b6d4;
+    --accent3: #f59e0b;
+    --danger: #ef4444;
+    --success: #10b981;
+    --text: #e8e8f0;
+    --muted: #6b6b8a;
+    --card-glow: rgba(124, 58, 237, 0.08);
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Space Mono', monospace;
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+  /* Grid noise background */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image:
+      linear-gradient(rgba(124,58,237,0.03) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(124,58,237,0.03) 1px, transparent 1px);
+    background-size: 40px 40px;
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  /* HEADER */
+  header {
+    position: relative;
+    z-index: 10;
+    padding: 20px 40px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    border-bottom: 1px solid var(--border);
+    background: rgba(10,10,15,0.8);
+    backdrop-filter: blur(10px);
+  }
+  .logo {
+    font-family: 'Syne', sans-serif;
+    font-weight: 800;
+    font-size: 1.5rem;
+    letter-spacing: -0.02em;
+  }
+  .logo span { color: var(--accent); }
+  .logo sup {
+    font-size: 0.45em;
+    background: var(--accent);
+    color: white;
+    padding: 1px 5px;
+    border-radius: 3px;
+    vertical-align: top;
+    margin-top: 4px;
+    font-weight: 700;
+  }
+  .badge {
+    font-size: 0.65rem;
+    color: var(--muted);
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+  }
+
+  /* TABS */
+  .tabs {
+    position: relative;
+    z-index: 10;
+    display: flex;
+    gap: 0;
+    padding: 20px 40px 0;
+    border-bottom: 1px solid var(--border);
+  }
+  .tab {
+    padding: 12px 24px;
+    font-family: 'Syne', sans-serif;
+    font-size: 0.85rem;
+    font-weight: 600;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    color: var(--muted);
+    cursor: pointer;
+    border: none;
+    background: none;
+    border-bottom: 2px solid transparent;
+    transition: all 0.2s;
+    position: relative;
+    top: 1px;
+  }
+  .tab:hover { color: var(--text); }
+  .tab.active { color: var(--accent); border-bottom-color: var(--accent); }
+  .tab-icon { margin-right: 8px; }
+
+  /* MAIN */
+  main { position: relative; z-index: 5; padding: 40px; max-width: 1100px; margin: 0 auto; }
+
+  .panel { display: none; }
+  .panel.active { display: block; animation: fadeIn 0.3s ease; }
+  @keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+
+  /* SECTION LABEL */
+  .section-label {
+    font-family: 'Syne', sans-serif;
+    font-size: 0.7rem;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: var(--accent);
+    margin-bottom: 8px;
+  }
+  h2 {
+    font-family: 'Syne', sans-serif;
+    font-size: 1.8rem;
+    font-weight: 800;
+    letter-spacing: -0.02em;
+    margin-bottom: 6px;
+  }
+  .subtitle { color: var(--muted); font-size: 0.8rem; margin-bottom: 30px; line-height: 1.6; }
+
+  /* TEXTAREA */
+  textarea {
+    width: 100%;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    color: var(--text);
+    font-family: 'Space Mono', monospace;
+    font-size: 0.82rem;
+    padding: 18px;
+    resize: vertical;
+    min-height: 180px;
+    outline: none;
+    transition: border-color 0.2s;
+    line-height: 1.7;
+  }
+  textarea:focus { border-color: var(--accent); }
+  textarea::placeholder { color: var(--muted); }
+
+  /* BUTTONS */
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 12px 24px;
+    border-radius: 6px;
+    font-family: 'Syne', sans-serif;
+    font-weight: 700;
+    font-size: 0.8rem;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    cursor: pointer;
+    border: none;
+    transition: all 0.2s;
+  }
+  .btn-primary {
+    background: var(--accent);
+    color: white;
+  }
+  .btn-primary:hover { background: #6d28d9; transform: translateY(-1px); box-shadow: 0 4px 20px rgba(124,58,237,0.4); }
+  .btn-primary:disabled { opacity: 0.5; cursor: not-allowed; transform: none; box-shadow: none; }
+  .btn-outline {
+    background: transparent;
+    color: var(--accent2);
+    border: 1px solid var(--accent2);
+  }
+  .btn-outline:hover { background: rgba(6,182,212,0.1); }
+  .btn-row { display: flex; gap: 12px; margin-top: 16px; flex-wrap: wrap; }
+
+  /* WORD COUNT */
+  .meta-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 6px;
+    margin-bottom: 0;
+  }
+  .word-count { font-size: 0.7rem; color: var(--muted); }
+
+  /* RESULTS */
+  .result-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 24px;
+    margin-top: 28px;
+    animation: fadeIn 0.4s ease;
+  }
+  .result-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+    flex-wrap: wrap;
+    gap: 12px;
+  }
+  .result-title {
+    font-family: 'Syne', sans-serif;
+    font-weight: 700;
+    font-size: 1rem;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+  }
+
+  /* SCORE RING */
+  .score-section {
+    display: flex;
+    gap: 24px;
+    align-items: flex-start;
+    flex-wrap: wrap;
+  }
+  .score-ring-wrap {
+    position: relative;
+    width: 110px;
+    height: 110px;
+    flex-shrink: 0;
+  }
+  .score-ring-wrap svg { transform: rotate(-90deg); }
+  .score-center {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+  }
+  .score-num {
+    font-family: 'Syne', sans-serif;
+    font-size: 1.6rem;
+    font-weight: 800;
+    line-height: 1;
+  }
+  .score-label { font-size: 0.55rem; color: var(--muted); letter-spacing: 0.08em; text-transform: uppercase; }
+
+  /* STAT BARS */
+  .stats-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; flex: 1; min-width: 200px; }
+  .stat-item { }
+  .stat-label { font-size: 0.68rem; color: var(--muted); letter-spacing: 0.05em; text-transform: uppercase; margin-bottom: 5px; }
+  .stat-bar-bg {
+    height: 6px;
+    background: var(--surface2);
+    border-radius: 3px;
+    overflow: hidden;
+  }
+  .stat-bar {
+    height: 100%;
+    border-radius: 3px;
+    transition: width 1s cubic-bezier(0.4,0,0.2,1);
+  }
+  .stat-val { font-size: 0.75rem; font-weight: 700; margin-top: 3px; }
+
+  /* HIGHLIGHTED TEXT */
+  .highlighted-text {
+    background: var(--surface2);
+    border-radius: 8px;
+    padding: 16px;
+    margin-top: 16px;
+    font-size: 0.8rem;
+    line-height: 1.8;
+  }
+  .hl-plagiarism { background: rgba(239,68,68,0.25); border-radius: 3px; padding: 1px 3px; }
+  .hl-ai { background: rgba(245,158,11,0.25); border-radius: 3px; padding: 1px 3px; }
+  .hl-legend { display: flex; gap: 16px; margin-top: 10px; }
+  .hl-item { display: flex; align-items: center; gap: 6px; font-size: 0.68rem; color: var(--muted); }
+  .hl-dot { width: 10px; height: 10px; border-radius: 2px; }
+
+  /* REPORT TABLE */
+  .report-table { width: 100%; border-collapse: collapse; margin-top: 16px; font-size: 0.75rem; }
+  .report-table th {
+    text-align: left;
+    padding: 8px 12px;
+    background: var(--surface2);
+    color: var(--muted);
+    font-family: 'Syne', sans-serif;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    font-size: 0.65rem;
+  }
+  .report-table td { padding: 10px 12px; border-bottom: 1px solid var(--border); vertical-align: top; }
+  .report-table tr:last-child td { border-bottom: none; }
+  .source-name { color: var(--accent2); font-weight: 700; }
+  .match-pct { font-family: 'Syne', sans-serif; font-weight: 700; }
+  .pill {
+    display: inline-block;
+    padding: 2px 8px;
+    border-radius: 20px;
+    font-size: 0.65rem;
+    font-weight: 700;
+    font-family: 'Syne', sans-serif;
+  }
+  .pill-high { background: rgba(239,68,68,0.15); color: var(--danger); }
+  .pill-mid { background: rgba(245,158,11,0.15); color: var(--accent3); }
+  .pill-low { background: rgba(16,185,129,0.15); color: var(--success); }
+
+  /* OUTPUT BOX */
+  .output-box {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 18px;
+    font-size: 0.82rem;
+    line-height: 1.8;
+    margin-top: 20px;
+    white-space: pre-wrap;
+    min-height: 100px;
+  }
+  .output-actions { display: flex; gap: 10px; margin-top: 12px; }
+
+  /* LOADING SPINNER */
+  .spinner {
+    width: 18px; height: 18px;
+    border: 2px solid rgba(255,255,255,0.2);
+    border-top-color: white;
+    border-radius: 50%;
+    animation: spin 0.7s linear infinite;
+    display: inline-block;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  /* INPUT GRID */
+  .input-group { margin-bottom: 16px; }
+  .input-label { font-size: 0.7rem; color: var(--muted); letter-spacing: 0.08em; text-transform: uppercase; margin-bottom: 6px; }
+  select, input[type=text] {
+    width: 100%;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    color: var(--text);
+    font-family: 'Space Mono', monospace;
+    font-size: 0.8rem;
+    padding: 10px 14px;
+    outline: none;
+    transition: border-color 0.2s;
+  }
+  select:focus, input[type=text]:focus { border-color: var(--accent); }
+  option { background: var(--surface); }
+
+  .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+  @media (max-width: 600px) { .grid-2 { grid-template-columns: 1fr; } .tabs { padding: 16px 16px 0; } main { padding: 20px 16px; } header { padding: 14px 16px; } }
+
+  .divider { height: 1px; background: var(--border); margin: 24px 0; }
+
+  /* NOTICE */
+  .notice {
+    background: rgba(124,58,237,0.08);
+    border: 1px solid rgba(124,58,237,0.2);
+    border-radius: 6px;
+    padding: 12px 16px;
+    font-size: 0.72rem;
+    color: var(--muted);
+    line-height: 1.6;
+    margin-bottom: 20px;
+  }
+  .notice strong { color: var(--accent); }
+
+  /* COPY TOAST */
+  #copy-toast {
+    position: fixed;
+    bottom: 30px;
+    right: 30px;
+    background: var(--success);
+    color: white;
+    padding: 10px 20px;
+    border-radius: 6px;
+    font-family: 'Syne', sans-serif;
+    font-size: 0.8rem;
+    font-weight: 700;
+    z-index: 9999;
+    display: none;
+    animation: slideUp 0.3s ease;
+  }
+  @keyframes slideUp { from { transform: translateY(10px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+
+  .tag-row { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 10px; }
+  .tag { background: var(--surface2); border: 1px solid var(--border); border-radius: 20px; padding: 3px 10px; font-size: 0.65rem; color: var(--muted); }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="logo">Origin<span>AI</span> <sup>BETA</sup></div>
+  <div class="badge">Content Intelligence Suite · Powered by Claude</div>
+</header>
+
+<div class="tabs">
+  <button class="tab active" onclick="switchTab('plagiarism')"><span class="tab-icon">🔍</span>Plagiarism Check</button>
+  <button class="tab" onclick="switchTab('unique')"><span class="tab-icon">✨</span>Make Unique</button>
+  <button class="tab" onclick="switchTab('aidetect')"><span class="tab-icon">🤖</span>AI Detector</button>
+  <button class="tab" onclick="switchTab('generate')"><span class="tab-icon">⚡</span>Content Generator</button>
+</div>
+
+<main>
+
+<!-- ====== PLAGIARISM PANEL ====== -->
+<div class="panel active" id="panel-plagiarism">
+  <div class="section-label">Tool 01 / Plagiarism Detection</div>
+  <h2>Plagiarism Checker</h2>
+  <p class="subtitle">Paste your text below. Claude will analyze it for potential plagiarism, estimate similarity scores, and generate a detailed report with source analysis.</p>
+
+  <div class="notice"><strong>How it works:</strong> Claude analyzes linguistic patterns, phrase originality, structural uniqueness, and cross-references against known writing conventions to estimate plagiarism likelihood. Results are indicative and AI-powered.</div>
+
+  <textarea id="plag-input" placeholder="Paste your text here (minimum 50 words recommended)..." oninput="updateCount('plag-input','plag-count')"></textarea>
+  <div class="meta-row">
+    <span class="word-count" id="plag-count">0 words</span>
+    <span class="word-count">Recommended: 100–2000 words</span>
+  </div>
+  <div class="btn-row">
+    <button class="btn btn-primary" id="plag-btn" onclick="checkPlagiarism()">🔍 Analyze for Plagiarism</button>
+    <button class="btn btn-outline" onclick="clearField('plag-input','plag-count','plag-result')">Clear</button>
+  </div>
+
+  <div id="plag-result"></div>
+</div>
+
+<!-- ====== UNIQUE PANEL ====== -->
+<div class="panel" id="panel-unique">
+  <div class="section-label">Tool 02 / Content Uniquifier</div>
+  <h2>Make Content Unique</h2>
+  <p class="subtitle">Transform your existing content into original, plagiarism-free writing while preserving the core meaning and intent.</p>
+
+  <div class="input-group">
+    <div class="input-label">Rewrite Intensity</div>
+    <select id="unique-mode">
+      <option value="light">Light — Subtle rephrase, same structure</option>
+      <option value="moderate" selected>Moderate — New phrasing, same ideas</option>
+      <option value="heavy">Heavy — Deep rewrite, restructured</option>
+      <option value="creative">Creative — Fresh perspective, new angle</option>
+    </select>
+  </div>
+  <div class="input-group">
+    <div class="input-label">Tone</div>
+    <select id="unique-tone">
+      <option value="match">Match original tone</option>
+      <option value="professional">Professional</option>
+      <option value="casual">Casual & Conversational</option>
+      <option value="academic">Academic</option>
+    </select>
+  </div>
+
+  <textarea id="unique-input" placeholder="Paste the text you want to make unique..." oninput="updateCount('unique-input','unique-count')"></textarea>
+  <div class="meta-row">
+    <span class="word-count" id="unique-count">0 words</span>
+  </div>
+  <div class="btn-row">
+    <button class="btn btn-primary" id="unique-btn" onclick="makeUnique()">✨ Make Unique</button>
+    <button class="btn btn-outline" onclick="clearField('unique-input','unique-count','unique-result')">Clear</button>
+  </div>
+  <div id="unique-result"></div>
+</div>
+
+<!-- ====== AI DETECTOR PANEL ====== -->
+<div class="panel" id="panel-aidetect">
+  <div class="section-label">Tool 03 / AI Content Detection</div>
+  <h2>AI Content Detector</h2>
+  <p class="subtitle">Detect whether content was written by a human or generated by AI tools like ChatGPT, Gemini, or other LLMs.</p>
+
+  <textarea id="ai-input" placeholder="Paste text to check for AI generation..." oninput="updateCount('ai-input','ai-count')"></textarea>
+  <div class="meta-row">
+    <span class="word-count" id="ai-count">0 words</span>
+  </div>
+  <div class="btn-row">
+    <button class="btn btn-primary" id="ai-btn" onclick="detectAI()">🤖 Detect AI Content</button>
+    <button class="btn btn-outline" onclick="clearField('ai-input','ai-count','ai-result')">Clear</button>
+  </div>
+  <div id="ai-result"></div>
+</div>
+
+<!-- ====== GENERATOR PANEL ====== -->
+<div class="panel" id="panel-generate">
+  <div class="section-label">Tool 04 / Content Generator</div>
+  <h2>Unique Content Generator</h2>
+  <p class="subtitle">Generate 100% original, SEO-friendly, human-like content on any topic. All output is crafted to be plagiarism-free and AI-detection resistant.</p>
+
+  <div class="grid-2">
+    <div class="input-group">
+      <div class="input-label">Content Type</div>
+      <select id="gen-type">
+        <option value="blog">Blog Article</option>
+        <option value="essay">Academic Essay</option>
+        <option value="product">Product Description</option>
+        <option value="social">Social Media Post</option>
+        <option value="email">Email / Newsletter</option>
+        <option value="report">Business Report</option>
+        <option value="creative">Creative Writing</option>
+      </select>
+    </div>
+    <div class="input-group">
+      <div class="input-label">Tone</div>
+      <select id="gen-tone">
+        <option value="professional">Professional</option>
+        <option value="casual">Casual & Friendly</option>
+        <option value="academic">Academic</option>
+        <option value="persuasive">Persuasive</option>
+        <option value="storytelling">Storytelling</option>
+      </select>
+    </div>
+  </div>
+  <div class="grid-2">
+    <div class="input-group">
+      <div class="input-label">Word Count Target</div>
+      <select id="gen-length">
+        <option value="short">Short (~150 words)</option>
+        <option value="medium" selected>Medium (~350 words)</option>
+        <option value="long">Long (~600 words)</option>
+      </select>
+    </div>
+    <div class="input-group">
+      <div class="input-label">Target Audience</div>
+      <input type="text" id="gen-audience" placeholder="e.g. marketing professionals, students...">
+    </div>
+  </div>
+  <div class="input-group">
+    <div class="input-label">Topic / Prompt</div>
+    <textarea id="gen-input" style="min-height:100px" placeholder="Describe what you want written. Be specific for best results. e.g. 'The impact of AI on modern healthcare and patient outcomes'" oninput="updateCount('gen-input','gen-count')"></textarea>
+    <div class="meta-row"><span class="word-count" id="gen-count">0 words</span></div>
+  </div>
+  <div class="btn-row">
+    <button class="btn btn-primary" id="gen-btn" onclick="generateContent()">⚡ Generate Content</button>
+    <button class="btn btn-outline" onclick="clearField('gen-input','gen-count','gen-result')">Clear</button>
+  </div>
+  <div id="gen-result"></div>
+</div>
+
+</main>
+
+<div id="copy-toast">✓ Copied to clipboard!</div>
+
+<script>
+const API_URL = "https://api.anthropic.com/v1/messages";
+
+// ===================== UTILS =====================
+function updateCount(inputId, countId) {
+  const text = document.getElementById(inputId).value.trim();
+  const words = text ? text.split(/\s+/).length : 0;
+  document.getElementById(countId).textContent = words + ' word' + (words !== 1 ? 's' : '');
+}
+
+function clearField(inputId, countId, resultId) {
+  document.getElementById(inputId).value = '';
+  document.getElementById(countId).textContent = '0 words';
+  document.getElementById(resultId).innerHTML = '';
+}
+
+function switchTab(name) {
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+  event.target.closest('.tab').classList.add('active');
+  document.getElementById('panel-' + name).classList.add('active');
+}
+
+function setLoading(btnId, loading, text) {
+  const btn = document.getElementById(btnId);
+  btn.disabled = loading;
+  btn.innerHTML = loading ? `<span class="spinner"></span> Analyzing...` : text;
+}
+
+async function callClaude(systemPrompt, userPrompt) {
+  const response = await fetch(API_URL, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      model: 'claude-sonnet-4-20250514',
+      max_tokens: 1000,
+      system: systemPrompt,
+      messages: [{ role: 'user', content: userPrompt }]
+    })
+  });
+  const data = await response.json();
+  if (data.error) throw new Error(data.error.message);
+  return data.content[0].text;
+}
+
+function copyToClipboard(text) {
+  navigator.clipboard.writeText(text).then(() => {
+    const toast = document.getElementById('copy-toast');
+    toast.style.display = 'block';
+    setTimeout(() => toast.style.display = 'none', 2000);
+  });
+}
+
+// ===================== RING SVG =====================
+function makeRing(score, color) {
+  const r = 45, cx = 55, cy = 55;
+  const circ = 2 * Math.PI * r;
+  const dash = (score / 100) * circ;
+  return `<svg width="110" height="110" viewBox="0 0 110 110">
+    <circle cx="${cx}" cy="${cy}" r="${r}" fill="none" stroke="var(--surface2)" stroke-width="8"/>
+    <circle cx="${cx}" cy="${cy}" r="${r}" fill="none" stroke="${color}" stroke-width="8"
+      stroke-dasharray="${dash} ${circ}" stroke-linecap="round" style="transition:stroke-dasharray 1s ease"/>
+  </svg>`;
+}
+
+function scoreColor(score) {
+  if (score >= 70) return 'var(--danger)';
+  if (score >= 40) return 'var(--accent3)';
+  return 'var(--success)';
+}
+
+// ===================== PLAGIARISM =====================
+async function checkPlagiarism() {
+  const text = document.getElementById('plag-input').value.trim();
+  if (!text || text.split(/\s+/).length < 20) { alert('Please enter at least 20 words.'); return; }
+
+  setLoading('plag-btn', true, '🔍 Analyze for Plagiarism');
+
+  const sys = `You are a plagiarism detection AI. Analyze text and return ONLY valid JSON (no markdown, no backticks) with this exact shape:
+{
+  "overall_score": <0-100 integer, higher = more plagiarized>,
+  "verdict": "<Clean | Low Risk | Moderate Risk | High Risk>",
+  "unique_pct": <0-100>,
+  "paraphrased_pct": <0-100>,
+  "direct_copy_pct": <0-100>,
+  "ai_written_pct": <0-100>,
+  "summary": "<2-3 sentence analysis>",
+  "flagged_phrases": ["phrase1","phrase2","phrase3"],
+  "sources": [
+    {"name":"<source type>","match_pct":<0-100>,"snippet":"<matched phrase>","risk":"high|medium|low"},
+    {"name":"<source type>","match_pct":<0-100>,"snippet":"<matched phrase>","risk":"high|medium|low"}
+  ],
+  "recommendations": ["rec1","rec2","rec3"]
+}
+Base your analysis on linguistic patterns, phrase originality, and writing conventions.`;
+
+  try {
+    const raw = await callClaude(sys, `Analyze this text for plagiarism:\n\n${text}`);
+    const d = JSON.parse(raw);
+
+    const col = scoreColor(d.overall_score);
+    const html = `
+    <div class="result-card">
+      <div class="result-header">
+        <div class="result-title">📋 Plagiarism Report</div>
+        <span class="pill ${d.overall_score >= 70 ? 'pill-high' : d.overall_score >= 40 ? 'pill-mid' : 'pill-low'}">${d.verdict}</span>
+      </div>
+
+      <div class="score-section">
+        <div class="score-ring-wrap">
+          ${makeRing(d.overall_score, col)}
+          <div class="score-center">
+            <span class="score-num" style="color:${col}">${d.overall_score}%</span>
+            <span class="score-label">Plagiarized</span>
+          </div>
+        </div>
+        <div class="stats-grid">
+          <div class="stat-item">
+            <div class="stat-label">Unique Content</div>
+            <div class="stat-bar-bg"><div class="stat-bar" style="width:${d.unique_pct}%;background:var(--success)"></div></div>
+            <div class="stat-val" style="color:var(--success)">${d.unique_pct}%</div>
+          </div>
+          <div class="stat-item">
+            <div class="stat-label">Direct Copy</div>
+            <div class="stat-bar-bg"><div class="stat-bar" style="width:${d.direct_copy_pct}%;background:var(--danger)"></div></div>
+            <div class="stat-val" style="color:var(--danger)">${d.direct_copy_pct}%</div>
+          </div>
+          <div class="stat-item">
+            <div class="stat-label">Paraphrased</div>
+            <div class="stat-bar-bg"><div class="stat-bar" style="width:${d.paraphrased_pct}%;background:var(--accent3)"></div></div>
+            <div class="stat-val" style="color:var(--accent3)">${d.paraphrased_pct}%</div>
+          </div>
+          <div class="stat-item">
+            <div class="stat-label">AI-Written</div>
+            <div class="stat-bar-bg"><div class="stat-bar" style="width:${d.ai_written_pct}%;background:var(--accent)"></div></div>
+            <div class="stat-val" style="color:var(--accent)">${d.ai_written_pct}%</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="divider"></div>
+      <div style="font-size:0.8rem;line-height:1.7;color:var(--muted)">${d.summary}</div>
+
+      ${d.flagged_phrases && d.flagged_phrases.length ? `
+      <div style="margin-top:16px">
+        <div class="stat-label" style="margin-bottom:8px">Flagged Phrases</div>
+        <div class="highlighted-text">${text.replace(new RegExp('(' + d.flagged_phrases.map(p => p.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')).join('|') + ')','gi'), '<span class="hl-plagiarism">$1</span>')}</div>
+        <div class="hl-legend">
+          <div class="hl-item"><div class="hl-dot" style="background:rgba(239,68,68,0.4)"></div>Flagged Phrase</div>
+        </div>
+      </div>` : ''}
+
+      ${d.sources && d.sources.length ? `
+      <div style="margin-top:20px">
+        <div class="stat-label" style="margin-bottom:8px">Source Analysis</div>
+        <table class="report-table">
+          <tr><th>Source Type</th><th>Match %</th><th>Snippet</th><th>Risk</th></tr>
+          ${d.sources.map(s => `<tr>
+            <td class="source-name">${s.name}</td>
+            <td class="match-pct" style="color:${scoreColor(s.match_pct)}">${s.match_pct}%</td>
+            <td style="color:var(--muted);font-size:0.72rem">${s.snippet}</td>
+            <td><span class="pill pill-${s.risk === 'high' ? 'high' : s.risk === 'medium' ? 'mid' : 'low'}">${s.risk}</span></td>
+          </tr>`).join('')}
+        </table>
+      </div>` : ''}
+
+      ${d.recommendations && d.recommendations.length ? `
+      <div style="margin-top:20px">
+        <div class="stat-label" style="margin-bottom:8px">Recommendations</div>
+        ${d.recommendations.map(r => `<div style="font-size:0.78rem;color:var(--muted);padding:5px 0;border-bottom:1px solid var(--border)">→ ${r}</div>`).join('')}
+      </div>` : ''}
+
+    </div>`;
+    document.getElementById('plag-result').innerHTML = html;
+  } catch(e) {
+    document.getElementById('plag-result').innerHTML = `<div class="result-card"><div style="color:var(--danger)">Error: ${e.message}</div></div>`;
+  }
+  setLoading('plag-btn', false, '🔍 Analyze for Plagiarism');
+}
+
+// ===================== MAKE UNIQUE =====================
+async function makeUnique() {
+  const text = document.getElementById('unique-input').value.trim();
+  if (!text || text.split(/\s+/).length < 10) { alert('Please enter at least 10 words.'); return; }
+  const mode = document.getElementById('unique-mode').value;
+  const tone = document.getElementById('unique-tone').value;
+
+  setLoading('unique-btn', true, '✨ Make Unique');
+
+  const modeMap = { light: 'lightly rephrase', moderate: 'moderately rewrite', heavy: 'deeply rewrite and restructure', creative: 'creatively reimagine from a fresh angle' };
+  const toneMap = { match: 'match the original tone', professional: 'use a professional tone', casual: 'use a casual, conversational tone', academic: 'use an academic tone' };
+
+  const sys = `You are an expert content writer specializing in creating unique, original content. Your task is to ${modeMap[mode]} the given text while preserving its core meaning. ${toneMap[tone]}. Make the content sound completely human-written, natural, and original. Avoid clichés, robotic phrasing, and obvious AI patterns. Return ONLY the rewritten text, nothing else.`;
+
+  try {
+    const result = await callClaude(sys, text);
+    const origWords = text.split(/\s+/).length;
+    const newWords = result.split(/\s+/).length;
+
+    document.getElementById('unique-result').innerHTML = `
+    <div class="result-card">
+      <div class="result-header">
+        <div class="result-title">✨ Uniquified Content</div>
+        <div style="display:flex;gap:10px;font-size:0.7rem;color:var(--muted)">
+          <span>Original: ${origWords}w</span>
+          <span>→</span>
+          <span>New: ${newWords}w</span>
+        </div>
+      </div>
+      <div class="output-box" id="unique-output">${result}</div>
+      <div class="output-actions">
+        <button class="btn btn-outline" onclick="copyToClipboard(document.getElementById('unique-output').textContent)">📋 Copy</button>
+        <button class="btn btn-outline" onclick="document.getElementById('unique-input').value=document.getElementById('unique-output').textContent;updateCount('unique-input','unique-count');makeUnique()">🔄 Re-Uniquify</button>
+      </div>
+    </div>`;
+  } catch(e) {
+    document.getElementById('unique-result').innerHTML = `<div class="result-card"><div style="color:var(--danger)">Error: ${e.message}</div></div>`;
+  }
+  setLoading('unique-btn', false, '✨ Make Unique');
+}
+
+// ===================== AI DETECTION =====================
+async function detectAI() {
+  const text = document.getElementById('ai-input').value.trim();
+  if (!text || text.split(/\s+/).length < 20) { alert('Please enter at least 20 words.'); return; }
+
+  setLoading('ai-btn', true, '🤖 Detect AI Content');
+
+  const sys = `You are an expert AI content detector. Analyze text for AI-generation signals. Return ONLY valid JSON (no markdown, no backticks):
+{
+  "ai_probability": <0-100 integer>,
+  "verdict": "<Likely Human | Possibly AI-Assisted | Likely AI-Generated | Almost Certainly AI>",
+  "confidence": "<Low | Medium | High>",
+  "perplexity_level": "<Very Low | Low | Moderate | High | Very High>",
+  "burstiness": "<Low | Moderate | High>",
+  "signals": {
+    "uniform_sentence_length": <true|false>,
+    "excessive_transitions": <true|false>,
+    "lack_of_personality": <true|false>,
+    "repetitive_phrasing": <true|false>,
+    "overly_structured": <true|false>,
+    "no_colloquialisms": <true|false>
+  },
+  "ai_phrases": ["phrase1","phrase2"],
+  "human_signals": ["signal1","signal2"],
+  "analysis": "<detailed 3-4 sentence analysis>",
+  "model_guess": "<likely model type or 'Human-authored'>"
+}`;
+
+  try {
+    const raw = await callClaude(sys, `Detect if this text is AI-generated:\n\n${text}`);
+    const d = JSON.parse(raw);
+    const col = d.ai_probability >= 70 ? 'var(--danger)' : d.ai_probability >= 40 ? 'var(--accent3)' : 'var(--success)';
+    const isHuman = d.ai_probability < 40;
+
+    const signals = d.signals || {};
+    const signalLabels = {
+      uniform_sentence_length: 'Uniform Sentence Length',
+      excessive_transitions: 'Excessive Transitions',
+      lack_of_personality: 'Lack of Personality',
+      repetitive_phrasing: 'Repetitive Phrasing',
+      overly_structured: 'Overly Structured',
+      no_colloquialisms: 'No Colloquialisms'
+    };
+
+    document.getElementById('ai-result').innerHTML = `
+    <div class="result-card">
+      <div class="result-header">
+        <div class="result-title">🤖 AI Detection Report</div>
+        <span class="pill ${d.ai_probability >= 70 ? 'pill-high' : d.ai_probability >= 40 ? 'pill-mid' : 'pill-low'}">${d.verdict}</span>
+      </div>
+
+      <div class="score-section">
+        <div class="score-ring-wrap">
+          ${makeRing(d.ai_probability, col)}
+          <div class="score-center">
+            <span class="score-num" style="color:${col}">${d.ai_probability}%</span>
+            <span class="score-label">AI Score</span>
+          </div>
+        </div>
+        <div style="flex:1;min-width:180px">
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px">
+            <div><div class="stat-label">Confidence</div><div style="font-size:0.85rem;font-weight:700;color:var(--accent2)">${d.confidence}</div></div>
+            <div><div class="stat-label">Perplexity</div><div style="font-size:0.85rem;font-weight:700;color:var(--accent)">${d.perplexity_level}</div></div>
+            <div><div class="stat-label">Burstiness</div><div style="font-size:0.85rem;font-weight:700;color:var(--accent3)">${d.burstiness}</div></div>
+            <div><div class="stat-label">Likely Source</div><div style="font-size:0.75rem;font-weight:700;color:var(--text)">${d.model_guess}</div></div>
+          </div>
+          <div class="stat-label" style="margin-bottom:6px">AI Signals Detected</div>
+          <div class="tag-row">
+            ${Object.entries(signals).filter(([k,v]) => v).map(([k]) => `<span class="tag" style="border-color:rgba(239,68,68,0.3);color:var(--danger)">⚠ ${signalLabels[k]||k}</span>`).join('')}
+            ${Object.entries(signals).filter(([k,v]) => !v).map(([k]) => `<span class="tag">✓ ${signalLabels[k]||k}</span>`).join('')}
+          </div>
+        </div>
+      </div>
+
+      <div class="divider"></div>
+      <div style="font-size:0.8rem;line-height:1.7;color:var(--muted)">${d.analysis}</div>
+
+      ${d.ai_phrases && d.ai_phrases.length ? `
+      <div style="margin-top:16px">
+        <div class="stat-label" style="margin-bottom:6px">AI-Typical Phrases</div>
+        <div class="tag-row">${d.ai_phrases.map(p=>`<span class="tag" style="border-color:rgba(245,158,11,0.3);color:var(--accent3)">"${p}"</span>`).join('')}</div>
+      </div>` : ''}
+
+      ${d.human_signals && d.human_signals.length ? `
+      <div style="margin-top:12px">
+        <div class="stat-label" style="margin-bottom:6px">Human-Like Elements</div>
+        <div class="tag-row">${d.human_signals.map(p=>`<span class="tag" style="border-color:rgba(16,185,129,0.3);color:var(--success)">✓ ${p}</span>`).join('')}</div>
+      </div>` : ''}
+    </div>`;
+  } catch(e) {
+    document.getElementById('ai-result').innerHTML = `<div class="result-card"><div style="color:var(--danger)">Error: ${e.message}</div></div>`;
+  }
+  setLoading('ai-btn', false, '🤖 Detect AI Content');
+}
+
+// ===================== CONTENT GENERATOR =====================
+async function generateContent() {
+  const topic = document.getElementById('gen-input').value.trim();
+  if (!topic) { alert('Please enter a topic or prompt.'); return; }
+
+  const type = document.getElementById('gen-type').value;
+  const tone = document.getElementById('gen-tone').value;
+  const length = document.getElementById('gen-length').value;
+  const audience = document.getElementById('gen-audience').value || 'general audience';
+
+  const lengthMap = { short: '120-180 words', medium: '300-400 words', long: '550-650 words' };
+  const typeMap = { blog: 'blog article', essay: 'academic essay', product: 'product description', social: 'social media post', email: 'email/newsletter', report: 'business report', creative: 'creative writing piece' };
+
+  setLoading('gen-btn', true, '⚡ Generate Content');
+
+  const sys = `You are an expert content writer. Write completely original, human-sounding ${typeMap[type]} content. 
+Rules:
+- Target audience: ${audience}
+- Tone: ${tone}
+- Length: ${lengthMap[length]}
+- Use varied sentence structures, natural flow, personality, and occasional imperfections to sound human
+- Avoid AI clichés like "In today's fast-paced world", "It's worth noting", "Delve into", "Elevate"
+- Be specific, insightful, and genuinely useful
+- Do NOT add any meta-commentary about the content
+Return ONLY the content itself.`;
+
+  try {
+    const result = await callClaude(sys, `Write about: ${topic}`);
+    const words = result.split(/\s+/).length;
+
+    document.getElementById('gen-result').innerHTML = `
+    <div class="result-card">
+      <div class="result-header">
+        <div class="result-title">⚡ Generated Content</div>
+        <div style="display:flex;gap:12px;align-items:center">
+          <span style="font-size:0.7rem;color:var(--muted)">${words} words · ${typeMap[type]}</span>
+          <span class="pill pill-low">100% Original</span>
+        </div>
+      </div>
+      <div class="output-box" id="gen-output">${result}</div>
+      <div class="output-actions">
+        <button class="btn btn-outline" onclick="copyToClipboard(document.getElementById('gen-output').textContent)">📋 Copy</button>
+        <button class="btn btn-outline" onclick="generateContent()">🔄 Regenerate</button>
+        <button class="btn btn-outline" onclick="sendToUnique(document.getElementById('gen-output').textContent)">✨ Make More Unique</button>
+      </div>
+    </div>`;
+  } catch(e) {
+    document.getElementById('gen-result').innerHTML = `<div class="result-card"><div style="color:var(--danger)">Error: ${e.message}</div></div>`;
+  }
+  setLoading('gen-btn', false, '⚡ Generate Content');
+}
+
+function sendToUnique(text) {
+  document.getElementById('unique-input').value = text;
+  updateCount('unique-input','unique-count');
+  switchTab('unique');
+  // fix tab UI
+  document.querySelectorAll('.tab').forEach((t,i) => { if(i===1) t.classList.add('active'); else t.classList.remove('active'); });
+}
+</script>
+</body>
+</html>
